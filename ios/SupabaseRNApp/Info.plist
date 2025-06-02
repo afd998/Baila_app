@@ -27,6 +27,7 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
+          <string>supabasernapp</string>
           <string>com.supabasernapp</string>
         </array>
       </dict>
@@ -75,7 +76,7 @@
       <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
     <key>UIUserInterfaceStyle</key>
-    <string>Light</string>
+    <string>Automatic</string>
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false/>
   </dict>
