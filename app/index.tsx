@@ -1,4 +1,4 @@
-import { YStack, Button, H1, Text, useTheme } from 'tamagui';
+import { YStack, Button, H1, Text, useTheme, Image } from 'tamagui';
 import { router } from 'expo-router';
 
 export default function WelcomeScreen() {
@@ -6,8 +6,14 @@ export default function WelcomeScreen() {
 
   return (
     <YStack f={1} ai="center" jc="center" p="$4" space="$4" bg="$background">
-      <H1 color="$color" size="$10">Welcome</H1>
-      <Text color="$color" fontSize="$6" ta="center" mb="$4">
+      <Image
+        source={require('../assets/images/baila-logo.png')}
+        width={200}
+        height={200}
+        resizeMode="contain"
+      />
+      <H1 col="$color" size="$10">Welcome</H1>
+      <Text col="$color" fontSize="$6" ta="center" mb="$4">
         Sign in to your account or create a new one
       </Text>
       <Button
@@ -15,16 +21,15 @@ export default function WelcomeScreen() {
         onPress={() => router.push('/(auth)/login')}
         w="100%"
         bg="$accent1"
-        color="$background"
+        color="white"
       >
         Sign In
       </Button>
       <Button
         size="$5"
-        variant="outlined"
         onPress={() => router.push('/(auth)/signup')}
         w="100%"
-        borderColor="$accent1"
+        bg="transparent"
         color="$accent1"
       >
         Sign Up

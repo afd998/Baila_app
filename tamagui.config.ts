@@ -1,10 +1,12 @@
 import { createTamagui } from 'tamagui'
 import { themes } from './themes'
-import { defaultConfig } from '@tamagui/config/v4'
+import { config as v3Config } from '@tamagui/config/v3'
+import { shorthands } from '@tamagui/shorthands'
 
 export const config = createTamagui({
-  ...defaultConfig,
+  ...v3Config,
   themes,
+  shorthands,
 })
 
 export type AppConfig = typeof config
@@ -14,3 +16,4 @@ declare module 'tamagui' {
 }
 
 export default config
+ 
