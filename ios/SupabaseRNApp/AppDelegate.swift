@@ -21,15 +21,18 @@ public class AppDelegate: ExpoAppDelegate {
     reactNativeFactory = factory
     bindReactNativeFactory(factory)
 
-#if os(iOS) || os(tvOS)
-    window = UIWindow(frame: UIScreen.main.bounds)
-    factory.startReactNative(
-      withModuleName: "main",
-      in: window,
-      launchOptions: launchOptions)
-#endif
+    // The window and React Native root are created in SceneDelegate. iOS 27
+    // refuses to launch apps that don't use the UIScene lifecycle. Expo's
+    // launch subscribers (e.g. expo-dev-launcher) need that window, so they
+    // run from finishLaunching(), called by the scene once the window exists.
+    self.launchOptions = launchOptions
+    return true
+  }
 
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  private var launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+
+  func finishLaunching() {
+    _ = super.application(UIApplication.shared, didFinishLaunchingWithOptions: launchOptions)
   }
 
   // Linking API
@@ -49,6 +52,46 @@ public class AppDelegate: ExpoAppDelegate {
   ) -> Bool {
     let result = RCTLinkingManager.application(application, continue: userActivity, restorationHandler: restorationHandler)
     return super.application(application, continue: userActivity, restorationHandler: restorationHandler) || result
+  }
+}
+
+// Kept in this file so the Xcode project doesn't need a new file reference.
+// Registered via UIApplicationSceneManifest in Info.plist.
+class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+  var window: UIWindow?
+
+  private var appDelegate: AppDelegate? {
+    UIApplication.shared.delegate as? AppDelegate
+  }
+
+  func scene(
+    _ scene: UIScene,
+    willConnectTo session: UISceneSession,
+    options connectionOptions: UIScene.ConnectionOptions
+  ) {
+    guard let windowScene = scene as? UIWindowScene,
+          let appDelegate = appDelegate,
+          let factory = appDelegate.reactNativeFactory else { return }
+
+    let window = UIWindow(windowScene: windowScene)
+    self.window = window
+    appDelegate.window = window
+    factory.startReactNative(withModuleName: "main", in: window, launchOptions: nil)
+    appDelegate.finishLaunching()
+
+    // A URL that launched the app arrives here instead of in launchOptions.
+    if let url = connectionOptions.urlContexts.first?.url {
+      _ = appDelegate.application(UIApplication.shared, open: url, options: [:])
+    }
+  }
+
+  func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+    guard let url = URLContexts.first?.url else { return }
+    _ = appDelegate?.application(UIApplication.shared, open: url, options: [:])
+  }
+
+  func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
+    _ = appDelegate?.application(UIApplication.shared, continue: userActivity) { _ in }
   }
 }
 

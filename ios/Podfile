@@ -60,5 +60,20 @@ target 'SupabaseRNApp' do
         end
       end
     end
+
+    # Xcode 27 rejects deployment targets below iOS 15, and some pods still
+    # declare 12.4/13.4. Raise them to match the app's target.
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        if config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f < 15.1
+          config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.1'
+        end
+        # fmt 11.0.2 fails to compile under Xcode 27's clang in C++20 mode
+        # (consteval errors). C++17 turns consteval off for fmt.
+        if target.name == 'fmt'
+          config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++17'
+        end
+      end
+    end
   end
 end
