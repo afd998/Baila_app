@@ -25,6 +25,10 @@ export interface PlaceDetails {
 
 const GOOGLE_PLACES_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY;
 
+// The API key is restricted to this iOS bundle ID in Google Cloud, so web
+// service requests must identify the app or Google rejects them.
+const GOOGLE_API_HEADERS = { 'X-Ios-Bundle-Identifier': 'com.supabasernapp' };
+
 export const useGooglePlaces = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,9 +57,7 @@ export const useGooglePlaces = () => {
         query
       )}&key=${GOOGLE_PLACES_API_KEY}&types=address&components=country:us`;
       
-      console.log('useGooglePlaces - Making API call to:', url);
-      
-      const response = await fetch(url);
+      const response = await fetch(url, { headers: GOOGLE_API_HEADERS });
       const data = await response.json();
       
       console.log('useGooglePlaces - API response:', data);
@@ -88,7 +90,8 @@ export const useGooglePlaces = () => {
 
     try {
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=place_id,name,formatted_address,geometry,types&key=${GOOGLE_PLACES_API_KEY}`
+        `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=place_id,name,formatted_address,geometry,types&key=${GOOGLE_PLACES_API_KEY}`,
+        { headers: GOOGLE_API_HEADERS }
       );
 
       const data = await response.json();
