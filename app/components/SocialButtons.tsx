@@ -4,39 +4,41 @@ import { FontAwesome } from '@expo/vector-icons';
 import { supabase } from '../../lib/supabase';
 import { Platform } from 'react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
-import { makeRedirectUri, useAuthRequest } from 'expo-auth-session';
+import { makeRedirectUri } from 'expo-auth-session';
+import * as QueryParams from 'expo-auth-session/build/QueryParams';
+import * as WebBrowser from 'expo-web-browser';
+
+// Must be listed under Supabase Auth > URL Configuration > Redirect URLs
+// (e.g. supabasernapp://**).
+const redirectTo = makeRedirectUri({ scheme: 'supabasernapp', path: 'callback' });
 
 export default function SocialButtons() {
   const theme = useTheme();
 
-  const [request, response, promptAsync] = useAuthRequest(
-    {
-      clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID!,
-      redirectUri: makeRedirectUri({
-        path: '/(auth)/callback'
-      }),
-      scopes: ['profile', 'email'],
-    },
-    {
-      authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
-      tokenEndpoint: 'https://oauth2.googleapis.com/token',
-    }
-  );
-
+  // Google sign-in goes through Supabase's OAuth flow, so Supabase issues the
+  // session tokens. Google's own tokens can't be used as a Supabase session.
   async function handleGoogleSignIn() {
     try {
-      const result = await promptAsync();
-      
-      if (result.type === 'success') {
-        const { access_token, refresh_token } = result.params;
-        
-        if (access_token && refresh_token) {
-          await supabase.auth.setSession({
-            access_token,
-            refresh_token,
-          });
-        }
-      }
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo, skipBrowserRedirect: true },
+      });
+      if (error) throw error;
+
+      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+      if (result.type !== 'success') return;
+
+      const { params, errorCode } = QueryParams.getQueryParams(result.url);
+      if (errorCode) throw new Error(errorCode);
+
+      const { access_token, refresh_token } = params;
+      if (!access_token || !refresh_token) return;
+
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token,
+        refresh_token,
+      });
+      if (sessionError) throw sessionError;
     } catch (error) {
       console.error('Google sign in error:', error);
       alert('Error signing in with Google');

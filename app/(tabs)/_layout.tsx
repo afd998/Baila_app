@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { View, TouchableOpacity, StyleSheet, Image, Animated } from 'react-native';
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { View, TouchableOpacity, StyleSheet, Image, Animated, useColorScheme } from 'react-native';
+import { useState, useRef, useCallback } from 'react';
 import { router } from 'expo-router';
 import { ProfileTabIcon } from '../../components/ProfileTabIcon';
 
@@ -9,31 +9,10 @@ export default function TabLayout() {
   const rotationAnim = useRef(new Animated.Value(0)).current;
   const [isSpinning, setIsSpinning] = useState(false);
   
-  // Use static light theme to avoid all hook issues
-  const isDarkMode = false;
-  
-  useEffect(() => {
-    const subscription = Appearance.addChangeListener(({ colorScheme }) => {
-      setSystemColorScheme(colorScheme);
-      console.log('Appearance changed to:', colorScheme);
-    });
-
-    return () => subscription?.remove();
-  }, []);
-  
-  // Check system dark mode using React Native's Appearance API
-  const isSystemDarkMode = systemColorScheme === 'dark';
-  console.log('=== THEME DEBUG ===');
-  console.log('useColorScheme hook:', colorScheme);
-  console.log('Appearance.getColorScheme():', Appearance.getColorScheme());
-  console.log('State systemColorScheme:', systemColorScheme);
-  console.log('Is system dark mode:', isSystemDarkMode);
-  console.log('Theme background color:', theme.background.val);
-  console.log('==================');
+  // Match the system theme, like the root layout's Tamagui theme does.
+  const isDarkMode = useColorScheme() === 'dark';
 
   const handleCreatePress = useCallback(() => {
-    console.log('Create button pressed!');
-    
     // Start the 3D rotation animation
     if (!isSpinning) {
       setIsSpinning(true);
